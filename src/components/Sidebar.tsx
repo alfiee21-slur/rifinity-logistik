@@ -238,6 +238,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
           </div>
         )}
       </div>
+    </div>
 
       {/* Premium Log Out Confirmation Popup */}
       <AnimatePresence>
