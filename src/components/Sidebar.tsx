@@ -113,7 +113,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   }
 
   return (
-    <div className={`sidebar glass ${isOpen ? 'is-mobile-open' : ''}`}>
+    <>
+      <div className={`sidebar glass ${isOpen ? 'is-mobile-open' : ''}`}>
       <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '1.25rem 1.5rem' }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
           <Logo size="sm" layout="horizontal" showText={true} />
@@ -284,6 +285,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   )
 }
