@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Item {
+  id           String        @id @default(cuid())
+  name         String
+  sku          String        @unique
+  category     String
+  owner        String        @default("PT Rifinity Logistik")
+  quantity     Int           @default(0)
+  unit         String        @default("pcs")
+  length       Float?
+  width        Float?
+  height       Float?
+  weight       Float?
+  location     String?
+  rackLocation String?       // e.g. "ZONA-P / RAK-03"
+  supplier     String?       // Supplier default barang ini
+  buyPrice     Float         @default(0)
+  sellPrice    Float         @default(0)
+  status       String        @default("AKTIF")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String         @id @default(cuid())
+  itemId        String
+  item          Item           @relation(fields: [itemId], references: [id])
+  type          String         // "IN" or "OUT"
+  quantity      Int
+  totalValue    Float          @default(0)
+  notes         String?        // Catatan bebas tambahan
+
+  // IN-specific fields
+  supplier      String?        // Nama supplier (inbound)
+
+  // OUT-specific fields
+  recipient     String?        // Nama penerima / pembeli
+  recipientCity String?        // Kota tujuan
+  recipientAddr String?        // Alamat lengkap tujuan
+  courierName   String?        // Nama layanan kurir (e.g. "SiCepat Reguler")
+  courierCode   String?        // Kode kurir (e.g. "SICEPAT", "JNT", "JNE")
+  awbNumber     String?        // Nomor resi / AWB
+  shippingCost  Float          @default(0)  // Ongkos kirim (Rp)
+  paymentMethod String?        // "Tunai" atau "Non-Tunai"
+
+  createdAt     DateTime       @default(now())
+
+  shippingLabel ShippingLabel?
+}
+
+model PackagingLog {
+  id             String   @id @default(cuid())
+  length         Float
+  width          Float
+  height         Float
+  weight         Float
+  recommendation String
+  createdAt      DateTime @default(now())
+}
+
+model ShippingLabel {
+  id            String      @id @default(cuid())
+  transactionId String      @unique
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  printedAt     DateTime    @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      String   // "MANAGER" | "ADMIN" | "OPERATOR" | "FINANCE"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings  UserSettings?
+}
+
+model UserSettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Profile Photo (Base64)
+  profilePic            String?
+  
+  // UI & System Preferences
+  theme                 String   @default("dark")
+  language              String   @default("id")
+  glassDensity          String   @default("high")
+  glowEffects           Boolean  @default(true)
+  sidebarHoverBounce    Boolean  @default(true)
+  autoLockSession       String   @default("never")
+  systemSounds          Boolean  @default(true)
+  debugMode             Boolean  @default(false)
+  
+  // Signature (Base64)
+  signature             String?  // PNG Base64
+  sigScale              Int      @default(100)
+  
+  // AI Logistics Prefs
+  aiModel               String   @default("gemini-2.5-flash")
+  aiAutosave            Boolean  @default(true)
+  aiStrictPrefix        Boolean  @default(true)
+  aiComplianceCheck     Boolean  @default(true)
+  aiOptMode             String   @default("balanced")
+  aiDocLanguage         String   @default("dynamic")
+  aiCreativity          Float    @default(0.2)
+  aiCustomContext       String   @default("Fokus penuh pada pekerjaan logistik (surat jalan, purchase order, commercial invoice, impor ekspor, inventory control). Tolong abaikan topik di luar logistik.")
+  
+  // Alert Configurations
+  notifWhatsapp         Boolean  @default(true)
+  notifWhatsappPhone    String   @default("6281234567890")
+  notifAutoEmail        Boolean  @default(true)
+  notifAutoEmailAddress String   @default("supplier@rifinitylogistik.co.id")
+  notifTelegram         Boolean  @default(false)
+  telegramBotToken      String   @default("")
+  telegramChatId        String   @default("")
+  
+  updatedAt             DateTime @updatedAt
+}
+
+model SystemSettings {
+  id                  String   @id @default("global")
+  
+  // Company Branding (Only MANAGER can change)
+  companyName         String   @default("PT. RIFINITY LOGISTIK GLOBAL")
+  companyTagline      String   @default("Smart Warehousing & Integrated Supply Chain Solutions")
+  companyAddress      String   @default("Jl. Raya Logistik No. 18, Jakarta Timur, Indonesia")
+  companyPhone        String   @default("(021) 1234 5678")
+  companyEmail        String   @default("info@rifinitylogistics.com")
+  companyWeb          String   @default("www.rifinitylogistics.com")
+  companyLogo         String?  // Base64 Company Logo
+  
+  // WMS Global Thresholds
+  criticalThreshold   Int      @default(5)
+  predictiveThreshold Int      @default(20)
+  defaultCourier      String   @default("PT Rifinity Express")
+  
+  updatedAt           DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  username  String
+  name      String
+  role      String
+  action    String
+  details   String
+  createdAt DateTime @default(now())
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  type      String   // "SUPPLIER" | "CUSTOMER"
+  name      String
+  company   String?
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
